@@ -1,49 +1,31 @@
 #!/bin/bash
 
-# Env Vars:
-# NUM: number of instances of the job to run
-# REGISTRY: name of the image registry/namespace to get the images
-
 # Clean up previous run
 function clean() {
   set +ex
   echo Cleaning...
-  (
-  ibmcloud ce job delete -n job-job -f
-  ibmcloud ce jobrun delete -n job-doit  -f
-  ibmcloud ce jobrun delete -n job-doit2 -f
-  rm -f out
-  ) > /dev/null 2>&1
+  ibmcloud ce job delete -n job-engine -f --inf
+  # ibmcloud ce jobrun delete -n job-engine-instance  -f  --ignore--not-found
 }
 
-clean
-[[ "$1" == "clean" ]] && exit 0
-
 set -ex
-export REGISTRY=${REGISTRY:-ibmcom}
-export NUM=${NUM:-10}
+
+export REGISTRY=de.icr.io/codeengine-job
+export REGION=eu-de
+export API_KEY=Ld9beQpCK8lKLzvNXXiS0g9ODhGr0tGT55slBW5UIDg_
+export RESOURCE_GROUP=Default
+export REGISTRY_SECRET=ce-default-icr-eu-de
+
+echo "Login to IBM Cloud..."
+ibmcloud login -r ${REGION} --apikey ${API_KEY}
+ibmcloud target -g ${RESOURCE_GROUP}
+ibmcloud ce project select --id ceed57da-f34d-4980-b360-d8cabb6d6b2e
+
+clean
+# [[ "$1" == "clean" ]] && exit 0
 
 # Create a Job definition
-ibmcloud ce job create --name job-job --array-indices=1-${NUM} \
-  --image ${REGISTRY}/firstjob
+ibmcloud ce job create --name job-engine --image ${REGISTRY}/firstjob:latest --registry-secret=${REGISTRY_SECRET}
 
-# Now submit the job using that definition - and wait for it to finish
-ibmcloud ce jobrun submit --name job-doit --job job-job --wait
-
-# Now submit a job w/o creating a job definition first - and wait to finish
-ibmcloud ce jobrun submit --name job-doit2 --array-indices=1-${NUM} \
-  --image ${REGISTRY}/firstjob --wait
-
-# Show the stats about the job
-ibmcloud ce jobrun get --name job-doit2
-
-# Now look at a view of the logs to make sure it worked
-ibmcloud ce jobrun logs --instance job-doit2-1-0 | tee out
-
-if ! grep "Hi from"  out > /dev/null ; then
-  echo "Missing expected outout"
-  exit 1
-fi
-
-# Clean up
-clean
+# Now submit the job using that definition
+ibmcloud ce jobrun submit --name job-engine-instance --job job-engine
