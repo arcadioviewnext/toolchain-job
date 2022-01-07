@@ -10,6 +10,12 @@ function clean() {
 
 set -ex
 
+export REGISTRY=de.icr.io/codeengine-job
+export REGION=eu-de
+export API_KEY=Ld9beQpCK8lKLzvNXXiS0g9ODhGr0tGT55slBW5UIDg_
+export RESOURCE_GROUP=Default
+export REGISTRY_SECRET=ce-default-icr-eu-de
+
 echo "Login to IBM Cloud..."
 ibmcloud login -r ${REGION} --apikey ${API_KEY}
 ibmcloud target -g ${RESOURCE_GROUP}
