@@ -13,13 +13,14 @@ set -ex
 echo "Login to IBM Cloud..."
 ibmcloud login -r ${REGION} --apikey ${API_KEY}
 ibmcloud target -g ${RESOURCE_GROUP}
-ibmcloud ce project select --id ceed57da-f34d-4980-b360-d8cabb6d6b2e
+ibmcloud ce project select --name ${PROJECT_GROUP}
 
 clean
 # [[ "$1" == "clean" ]] && exit 0
 
 # Create a Job definition
-ibmcloud ce job create --name job-engine --image ${REGISTRY}/firstjob:latest --registry-secret=${REGISTRY_SECRET}
+ibmcloud ce job create --name job-engine --image ${REGISTRY}/firstjob:latest --registry-secret=${REGISTRY_SECRET} \
+  --env region=${REGION} --env resource-group=${RESOURCE_GROUP}
 
 # Now submit the job using that definition
 ibmcloud ce jobrun submit --name job-engine-instance --job job-engine
